@@ -1,0 +1,32 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+
+app:
+  postsKey: posts
+  postDuration: 7d
+  postsCountKey: postCount
+  maxPostsCount: 100
+  jwt-secret: sdfjsf
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true

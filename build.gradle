@@ -1,0 +1,74 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.0.0'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'org.graalvm.buildtools.native' version '0.9.18'
+}
+
+group = 'io.chiayungluk'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('testcontainersVersion', "1.17.6")
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+//    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+//    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
+
+    implementation 'com.auth0:java-jwt:4.2.1'
+
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.named('bootBuildImage') {
+    builder = 'paketobuildpacks/builder:base'
+    environment = [
+            "BP_JVM_VERSION"              : "17",
+            "BPE_DELIM_JAVA_TOOL_OPTIONS" : " ",
+            "BPE_APPEND_JAVA_TOOL_OPTIONS": "-XX:+HeapDumpOnOutOfMemoryError",
+    ]
+    imageName = "chiayungluk/community:${project.version}"
+    tags = ['chiayungluk/community:latest']
+    docker {
+        publishRegistry {
+            url = "https://hub.docker.com/repository/docker"
+            username = project.findProperty("DOCKERHUB_USERNAME") ?: System.getenv("DOCKERHUB_USERNAME");
+            password = project.findProperty("DOCKERHUB_TOKEN") ?: System.getenv("DOCKERHUB_TOKEN")
+        }
+    }
+}
